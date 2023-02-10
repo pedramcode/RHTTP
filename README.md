@@ -1,6 +1,6 @@
 # RHTTP
 
-A Redis HTTP server for hybrid back-end
+Redis HTTP server for hybrid back-end services
 
 ## Requirements
 * [CArgs](https://github.com/pedramcode/cargs)
