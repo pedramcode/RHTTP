@@ -1,15 +1,15 @@
-#include "cserver.h"
+#include "csocket.h"
 
 
-int cserver_create() {
+int csocket_create() {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
-        fprintf(stderr, "Cannot create cserver file\n");
+        fprintf(stderr, "Cannot create csocket file\n");
         exit(EXIT_FAILURE);
     }
     int opt = 1;
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
-        fprintf(stderr, "Cannot set cserver options\n");
+        fprintf(stderr, "Cannot set csocket options\n");
         exit(EXIT_FAILURE);
     }
     return sockfd;
@@ -54,7 +54,7 @@ _Noreturn void* server_listener(void* params){
     }
 }
 
-void cserver_listen(int sockfd, const unsigned int port) {
+void csocket_listen(int sockfd, const unsigned int port) {
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     address.sin_family = AF_INET;

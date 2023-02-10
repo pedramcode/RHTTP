@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cargs.h>
-#include "cserver.h"
+#include "csocket.h"
 
 
 int main(int argc, char* argv[]){
@@ -15,7 +15,7 @@ int main(int argc, char* argv[]){
 
     const int port = atoi(cargs_get(map, map_size, "port"));
 
-    int server = cserver_create();
-    cserver_listen(server, port);
+    int server = csocket_create();
+    csocket_listen(server, port);
     return EXIT_SUCCESS;
 }

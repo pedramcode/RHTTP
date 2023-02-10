@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include "chttp.h"
 
-int cserver_create();
-void cserver_listen(int sockfd, unsigned int port);
+int csocket_create();
+void csocket_listen(int sockfd, unsigned int port);
 
 #endif
