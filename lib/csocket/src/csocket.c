@@ -1,4 +1,5 @@
 #include "csocket.h"
+#include "credis.h"
 
 
 int csocket_create() {
@@ -19,15 +20,23 @@ typedef struct socket_func_struct {
     int sockfd;
 } socket_func_t;
 
+typedef struct req_handler_func_struct {
+    int sockfd;
+    redisContext* redis_ctx;
+} req_handler_func_t;
+
 void* request_handler(void* params){
-    int* new_socket = (int*) params;
+    req_handler_func_t* param_obj = (req_handler_func_t*) params;
+    int new_socket = param_obj->sockfd;
 
     char buffer[1024] = { 0 };
-    long val = read(*new_socket, buffer, 1024);
-    http_prot_t data = chttp_parse(buffer, REQUEST);
-    data.sock_id = *new_socket;
+    long val = read(new_socket, buffer, 1024);
+    http_prot_t* data = chttp_parse(buffer, REQUEST);
+    data->sock_id = new_socket;
+    credis_publish(param_obj->redis_ctx, "REQUEST_PIPE", chttp_to_str(data, REQUEST));
+    free(data);
 
-    http_prot_t res;
+    http_prot_t res = {0};
     res.http_version = "HTTP/1.1";
     res.status = 200;
     res.status_text = "OK";
@@ -35,10 +44,10 @@ void* request_handler(void* params){
     res.server = "My C server";
     res.content_type = "application/json";
     res.body = "{\"backend\":\"Wow it's really C!\", \"benefits\":[\"Speed\",\"Fast\",\"Quick\"]}";
-    char* res_str = chttp_response(res);
+    char* res_str = chttp_to_str(&res, RESPONSE);
 
-    send(*new_socket, res_str, strlen(res_str), 0);
-    close(*new_socket);
+    send(new_socket, res_str, strlen(res_str), 0);
+    close(new_socket);
     return 0;
 }
 
@@ -46,11 +55,14 @@ _Noreturn void* server_listener(void* params){
     socket_func_t *params_r = (socket_func_t*) params;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
+
+    redisContext* redis_ctx = credis_connect("127.0.0.1", 6379);
+
     while(1) {
         int new_socket = accept(params_r->sockfd, (struct sockaddr *) &address, (socklen_t *) &addrlen);
-
+        req_handler_func_t req_handler_params = {new_socket, redis_ctx};
         pthread_t handler_thread;
-        pthread_create(&handler_thread, NULL, request_handler, (void*) &new_socket);
+        pthread_create(&handler_thread, NULL, request_handler, (void*) &req_handler_params);
     }
 }
 

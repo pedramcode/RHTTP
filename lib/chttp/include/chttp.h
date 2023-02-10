@@ -56,7 +56,7 @@ typedef struct http_prot_struct {
 http_method_t chttp_str_to_method(char *type_str);
 char* chttp_method_to_str(http_method_t method);
 
-http_prot_t chttp_parse(char *data, http_prot_type_t type);
-char* chttp_response(http_prot_t prot);
+http_prot_t* chttp_parse(char *data, http_prot_type_t type);
+char* chttp_to_str(http_prot_t *prot_p, http_prot_type_t type);
 
 #endif
