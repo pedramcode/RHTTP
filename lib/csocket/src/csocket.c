@@ -22,47 +22,51 @@ typedef struct socket_func_struct {
 
 typedef struct req_handler_func_struct {
     int sockfd;
-    redisContext* redis_ctx;
+    redisContext *redis_ctx;
 } req_handler_func_t;
 
-void* request_handler(void* params){
-    req_handler_func_t* param_obj = (req_handler_func_t*) params;
+void *request_handler(void *params) {
+    req_handler_func_t *param_obj = (req_handler_func_t *) params;
     int new_socket = param_obj->sockfd;
 
-    char buffer[1024] = { 0 };
+    char buffer[1024] = {0};
     long val = read(new_socket, buffer, 1024);
-    http_prot_t* data = chttp_parse(buffer, REQUEST);
+    http_prot_t *data = chttp_parse(buffer, REQUEST);
     data->sock_id = new_socket;
     credis_publish(param_obj->redis_ctx, "REQUEST_PIPE", chttp_to_str(data, REQUEST));
     free(data);
-
-    http_prot_t res = {0};
-    res.http_version = "HTTP/1.1";
-    res.status = 200;
-    res.status_text = "OK";
-    res.connection = CLOSE;
-    res.server = "My C server";
-    res.content_type = "application/json";
-    res.body = "{\"backend\":\"Wow it's really C!\", \"benefits\":[\"Speed\",\"Fast\",\"Quick\"]}";
-    char* res_str = chttp_to_str(&res, RESPONSE);
-
-    send(new_socket, res_str, strlen(res_str), 0);
-    close(new_socket);
     return 0;
 }
 
-_Noreturn void* server_listener(void* params){
-    socket_func_t *params_r = (socket_func_t*) params;
+void response_handler(char *channel, char *data) {
+    if (strcmp(channel, "RESPONSE_PIPE") != 0) return;
+    http_prot_t *http = chttp_parse(data, RESPONSE);
+    char *res_str = chttp_to_str(http, RESPONSE);
+    send(http->sock_id, res_str, strlen(res_str), 0);
+    close(http->sock_id);
+    free(http);
+}
+
+void *redis_response_subscribe(){
+    redisAsyncContext *redis_ctx_async = credis_connect_async("127.0.0.1", 6379);
+    credis_subscribe(redis_ctx_async, "RESPONSE_PIPE", response_handler);
+    return NULL;
+}
+
+_Noreturn void *server_listener(void *params) {
+    socket_func_t *params_r = (socket_func_t *) params;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
 
-    redisContext* redis_ctx = credis_connect("127.0.0.1", 6379);
+    redisContext *redis_ctx = credis_connect("127.0.0.1", 6379);
+    pthread_t subscribe_thread;
+    pthread_create(&subscribe_thread, NULL, redis_response_subscribe, NULL);
 
-    while(1) {
+    while (1) {
         int new_socket = accept(params_r->sockfd, (struct sockaddr *) &address, (socklen_t *) &addrlen);
         req_handler_func_t req_handler_params = {new_socket, redis_ctx};
         pthread_t handler_thread;
-        pthread_create(&handler_thread, NULL, request_handler, (void*) &req_handler_params);
+        pthread_create(&handler_thread, NULL, request_handler, (void *) &req_handler_params);
     }
 }
 
@@ -85,6 +89,6 @@ void csocket_listen(int sockfd, const unsigned int port) {
     socket_func_t params;
     params.sockfd = sockfd;
     pthread_t listener_thread;
-    pthread_create(&listener_thread, NULL, server_listener, (void*) &params);
+    pthread_create(&listener_thread, NULL, server_listener, (void *) &params);
     pthread_join(listener_thread, NULL);
 }
