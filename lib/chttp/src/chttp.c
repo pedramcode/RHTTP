@@ -31,6 +31,9 @@ http_prot_t* chttp_parse(char *data, http_prot_type_t type) {
             char *next_dt = NULL;
             char *dt = strtok_r(tok, " ", &next_dt);
             int header_token = 0;
+            if(type==RESPONSE){
+                prot->status_text = (char *) calloc(sizeof(char), 0);
+            }
             while (dt != NULL) {
                 if (type == REQUEST) {
                     if (header_token == 0) {
@@ -51,9 +54,10 @@ http_prot_t* chttp_parse(char *data, http_prot_type_t type) {
                         strcpy(prot->http_version, dt);
                     } else if (header_token == 1) {
                         prot->status = atoi(dt);
-                    }else if(header_token == 2){
-                        prot->status_text = (char *) calloc(sizeof(char), strlen(dt));
-                        strcpy(prot->status_text, dt);
+                    }else{
+                        prot->status_text = (char *) realloc(prot->status_text, strlen(dt) + 1);
+                        strcat(prot->status_text, dt);
+                        strcat(prot->status_text, " ");
                     }
                 }
                 dt = strtok_r(NULL, " ", &next_dt);
