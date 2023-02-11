@@ -19,11 +19,6 @@ http_prot_t* chttp_parse(char *data, http_prot_type_t type) {
         strcpy(header_part, data);
     }
 
-    if (body_part != NULL) {
-        prot->body = (char *) calloc(sizeof(char), strlen(body_part));
-        strcpy(prot->body, body_part);
-    }
-
     char *tok = NULL;
     char *next_line = NULL;
     char line_del[] = "\r\n";
@@ -139,6 +134,12 @@ http_prot_t* chttp_parse(char *data, http_prot_type_t type) {
 
         line_num++;
         tok = strtok_r(NULL, line_del, &next_line);
+    }
+
+
+    if (body_part != NULL) {
+        prot->body = (char *) calloc(sizeof(char), strlen(body_part));
+        memcpy(prot->body, body_part, prot->content_length);
     }
 
     return prot;
