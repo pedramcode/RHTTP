@@ -47,10 +47,18 @@ void response_handler(char *channel, char *data) {
     free(http);
 }
 
-void *redis_response_subscribe(){
+void *redis_response_subscribe() {
     redisAsyncContext *redis_ctx_async = credis_connect_async("127.0.0.1", 6379);
     credis_subscribe(redis_ctx_async, "RESPONSE_PIPE", response_handler);
     return NULL;
+}
+
+_Noreturn void *heartbeat_broadcast(void *redis_content) {
+    while(1) {
+        redisContext *ctx = (redisContext *) redis_content;
+        credis_publish(ctx, "HEARTBEAT", "BEAT");
+        sleep(5);
+    }
 }
 
 _Noreturn void *server_listener(void *params) {
@@ -61,6 +69,9 @@ _Noreturn void *server_listener(void *params) {
     redisContext *redis_ctx = credis_connect("127.0.0.1", 6379);
     pthread_t subscribe_thread;
     pthread_create(&subscribe_thread, NULL, redis_response_subscribe, NULL);
+
+    pthread_t heartbeat_thread;
+    pthread_create(&heartbeat_thread, NULL, heartbeat_broadcast, (void *) redis_ctx);
 
     while (1) {
         int new_socket = accept(params_r->sockfd, (struct sockaddr *) &address, (socklen_t *) &addrlen);
