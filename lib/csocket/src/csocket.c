@@ -54,8 +54,8 @@ void *redis_response_subscribe() {
 }
 
 _Noreturn void *heartbeat_broadcast(void *redis_content) {
+    redisContext *ctx = (redisContext *) redis_content;
     while(1) {
-        redisContext *ctx = (redisContext *) redis_content;
         credis_publish(ctx, "HEARTBEAT", "BEAT");
         sleep(5);
     }
