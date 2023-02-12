@@ -25,4 +25,6 @@ unsigned int cnetwork_get_services_by_name(sqlite3 *db, char *name, Service_t **
 
 void cnetwork_print_service_info(Service_t *service);
 
+void cnetwork_delete_service_by_id(sqlite3 *db, unsigned int id);
+
 #endif

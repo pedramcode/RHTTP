@@ -35,7 +35,6 @@ void cnetwork_add_service(sqlite3 *db, Service_t *service){
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Cannot add service: %s\n", err);
         sqlite3_free(err);
-        return;
     }
     free(sql_service_add);
 }
@@ -258,4 +257,16 @@ unsigned int cnetwork_get_services_by_name(sqlite3 *db, char* name, Service_t **
 
 void cnetwork_print_service_info(Service_t *service){
     printf("#%d\t[%s]\t[%s]\t[%s]\n", service->id, service->name, service->desc, service->last_update);
+}
+
+void cnetwork_delete_service_by_id(sqlite3 *db, unsigned int id){
+    char *err = 0;
+    char *sql_service_add = (char*) calloc(sizeof(char), 1024);
+    sprintf(sql_service_add, "DELETE FROM SERVICE WHERE id=%d", id);
+    int rc = sqlite3_exec(db, sql_service_add, NULL, 0, &err);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot delete service: %s\n", err);
+        sqlite3_free(err);
+    }
+    free(sql_service_add);
 }
