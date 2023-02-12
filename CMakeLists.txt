@@ -6,6 +6,8 @@ project(server C)
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/csocket)
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/chttp)
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/credis)
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/cnetwork)
+
 file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/src/*.c)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -15,4 +17,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         csocket
         cargs
         credis
+        cnetwork
         chttp)

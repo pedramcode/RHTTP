@@ -7,3 +7,4 @@ Redis HTTP server for hybrid back-end services
 * [HIRedis](https://github.com/redis/hiredis)
 * [Libevent](https://libevent.org/)
 * LibSSL `sudo apt-get install libssl-dev`
+* SQLite3
