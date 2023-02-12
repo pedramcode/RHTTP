@@ -16,6 +16,6 @@ int main(int argc, char *argv[]) {
     const int port = atoi(cargs_get(map, map_size, "port"));
 
     int server = csocket_create();
-//    csocket_listen(server, port);
+    csocket_listen(server, port);
     return EXIT_SUCCESS;
 }
