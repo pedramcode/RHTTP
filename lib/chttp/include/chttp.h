@@ -33,7 +33,7 @@ typedef struct http_prot_struct {
     char *url;
     unsigned int status;
     char *http_version;
-    char* status_text;
+    char *status_text;
 
     char *host;
     char *user_agent;
@@ -53,10 +53,34 @@ typedef struct http_prot_struct {
     http_connection_t connection;
 } http_prot_t;
 
+/**
+ * @brief This function converts HTTP string method to <http_method_t> enum
+ * @param type_str String value of HTTP method (Example GET, POST, PUT, ...)
+ * @return http_method_t enum
+ */
 http_method_t chttp_str_to_method(char *type_str);
-char* chttp_method_to_str(http_method_t method);
 
-http_prot_t* chttp_parse(char *data, http_prot_type_t type);
-char* chttp_to_str(http_prot_t *prot_p, http_prot_type_t type);
+/**
+ * @brief Converts http_method_t structure to HTTP method string
+ * @param method A value of http_method_t enum
+ * @return HTTP method string value
+ */
+char *chttp_method_to_str(http_method_t method);
+
+/**
+ * @brief This function parses a raw HTTP message and converts it into http_prot_t structure
+ * @param data Raw HTTP message string
+ * @param type Is an enum value of http_prot_type_t, Request/Response
+ * @return http_prot_t structure
+ */
+http_prot_t *chttp_parse(char *data, http_prot_type_t type);
+
+/**
+ * @brief This function serializes value of http_prot_t to HTTP raw message string
+ * @param prot_p http_prot_t structure data
+ * @param type Is an enum value of http_prot_type_t, Request/Response
+ * @return Raw HTTP message string
+ */
+char *chttp_to_str(http_prot_t *prot_p, http_prot_type_t type);
 
 #endif
