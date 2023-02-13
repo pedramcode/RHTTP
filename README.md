@@ -8,7 +8,7 @@ This server can provide a microservice backend in the shortest time and with the
 
 ![RHTTP General Diagram](docs/images/rhttp_diagram.png)
 
-Services can seamlessly join/leave to RHTTP network without any interruption. RHTTP uses some mechanism I named it "Bat Vision" to detect new services or detect some service that left the network. RHTTP can send request to new services immediately after joining them and receive repsonses from them without any overhead.    
+Services can seamlessly join/leave to RHTTP network without any interruption. RHTTP uses some mechanism I named it "**Bat Vision**" to detect new services or detect some service that left the network. RHTTP can send request to new services immediately after joining them and receive repsonses from them without any overhead.    
 
 ![RHTTP Bat vision diagram](docs/images/bat_vision.png)
 
