@@ -20,7 +20,7 @@ Actually in a constant time interval, RHTTP publishes a signal called "**Heartbe
 
 ## Interfaces
 
-Here is a list of available and trusted interfaces for services to communicate with RHTTP service:
+Here is a list of available and trusted interfaces for services to communicate with RHTTP server:
 * [NodeJS interface (NPM)](https://www.npmjs.com/package/rhttp_node)
 
 ## Requirements
