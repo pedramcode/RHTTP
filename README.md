@@ -12,6 +12,8 @@ Services can seamlessly join/leave to RHTTP network without any interruption. RH
 
 ![RHTTP Bat vision diagram](docs/images/bat_vision.png)
 
+Actually in a constant time interval, RHTTP publishes a signal called "**Heartbeat**" into redis, Any service in scope can receive this signal and publishes service info into "**Acknowledge pipe**". Then RHTTP stores service info into database. If a defined service does not provide acknowledge for a couple of heartbeats, RHTTP will remove service from database. 
+
 ## Requirements
 * [CArgs](https://github.com/pedramcode/cargs)
 * [HIRedis](https://github.com/redis/hiredis)
