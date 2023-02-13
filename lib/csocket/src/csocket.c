@@ -1,6 +1,7 @@
 #include "csocket.h"
 #include "credis.h"
 
+static sqlite3 *db;
 
 int csocket_create() {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -33,6 +34,10 @@ void *request_handler(void *params) {
     long val = read(new_socket, buffer, 1024);
     http_prot_t *data = chttp_parse(buffer, REQUEST);
     data->sock_id = new_socket;
+
+    Net_Request_t req = {0, data->sock_id, ctime_get_now_str(), 0};
+    cnetwork_add_req(db, &req);
+
     credis_publish(param_obj->redis_ctx, "REQUEST_PIPE", chttp_to_str(data, REQUEST));
     free(data);
     return 0;
@@ -41,9 +46,12 @@ void *request_handler(void *params) {
 void response_handler(char *channel, char *data) {
     if (strcmp(channel, "RESPONSE_PIPE") != 0) return;
     http_prot_t *http = chttp_parse(data, RESPONSE);
+    http->date = ctime_get_now_str();
     char *res_str = chttp_to_str(http, RESPONSE);
     send(http->sock_id, res_str, strlen(res_str), 0);
     close(http->sock_id);
+    // Remove req from database
+    cnetwork_delete_req_by_sockfd(db, http->sock_id);
     free(http);
 }
 
@@ -55,10 +63,92 @@ void *redis_response_subscribe() {
 
 _Noreturn void *heartbeat_broadcast(void *redis_content) {
     redisContext *ctx = (redisContext *) redis_content;
-    while(1) {
+    unsigned int beat_inter = 1;
+    unsigned int exp_beat = 3;
+    while (1) {
         credis_publish(ctx, "HEARTBEAT", "BEAT");
-        sleep(5);
+
+        // Remove dead services
+        Service_t **services = 0;
+        unsigned int service_len = cnetwork_get_services(db, &services);
+        for (int x = 0; x < service_len; x++) {
+            time_t t = ctime_get_from_str(services[x]->last_update);
+            time_t now = ctime_get_now();
+            if (t + (beat_inter * exp_beat) < now) {
+                printf("Service deleted: %s\n", services[x]->name);
+                cnetwork_delete_service_by_id(db, services[x]->id);
+            }
+        }
+
+        // Take care of rejected requests
+        Net_Request_t **requests = 0;
+        unsigned int req_num = cnetwork_get_requests(db, &requests);
+        for (int i = 0; i < req_num; i++) {
+            if (requests[i]->rejected >= service_len) {
+                cnetwork_delete_req_by_sockfd(db, requests[i]->sockfd);
+                close(requests[i]->sockfd);
+            }
+        }
+
+        // Free allocated memory
+        for (int i = 0; i < service_len; i++) {
+            free(services[i]);
+        }
+        free(services);
+        for (int i = 0; i < req_num; i++) {
+            free(requests[i]);
+        }
+        free(requests);
+        sleep(beat_inter);
     }
+}
+
+void acknowledge_handler(char *channel, char *data) {
+    if (strcmp(channel, "ACKNOWLEDGE_PIPE") != 0) return;
+    char *sp = strchr(data, 14);
+    if (sp == NULL) return;
+    char *service_name = (char *) calloc( sp - data + 1, sizeof(char));
+    memcpy(service_name, data, sp - data);
+    char *service_desc = (char *) calloc( strlen(data) - strlen(service_name) + 1, sizeof(char));
+    strncpy(service_desc, sp + 1, strlen(data) - strlen(service_name));
+    service_desc[strlen(data) - strlen(service_name)] = '\0';
+
+    Service_t service = {0, service_name, service_desc, ctime_get_now_str()};
+    Service_t **services;
+    unsigned int service_count = cnetwork_get_services_by_name(db, service_name, &services);
+    if (service_count == 0) {
+        cnetwork_add_service(db, &service);
+        printf("Service created: %s\n", service.name);
+    } else {
+        service.id = services[0]->id;
+        cnetwork_update_service(db, &service);
+        printf("Service updated: %s\n", service.name);
+    }
+
+    for (int i = 0; i < service_count; i++) {
+        free(services[i]);
+    }
+    free(services);
+    free(service_name);
+    free(service_desc);
+}
+
+void *redis_acknowledge_subscribe() {
+    redisAsyncContext *redis_ctx_async = credis_connect_async("127.0.0.1", 6379);
+    credis_subscribe(redis_ctx_async, "ACKNOWLEDGE_PIPE", acknowledge_handler);
+    return NULL;
+}
+
+void reject_handler(char *channel, char *data) {
+    if (strcmp(channel, "REJECT_PIPE") != 0) return;
+    unsigned int sockfd = atoi(data);
+    cnetwork_inc_req_reject_by_sockfd(db, sockfd);
+}
+
+void *redis_reject_subscribe() {
+    redisAsyncContext *redis_ctx_async = credis_connect_async("127.0.0.1", 6379);
+    credis_subscribe(redis_ctx_async, "REJECT_PIPE", reject_handler);
+    return NULL;
 }
 
 _Noreturn void *server_listener(void *params) {
@@ -66,12 +156,20 @@ _Noreturn void *server_listener(void *params) {
     struct sockaddr_in address;
     int addrlen = sizeof(address);
 
+    db = cnetwork_init();
+
     redisContext *redis_ctx = credis_connect("127.0.0.1", 6379);
     pthread_t subscribe_thread;
     pthread_create(&subscribe_thread, NULL, redis_response_subscribe, NULL);
 
     pthread_t heartbeat_thread;
     pthread_create(&heartbeat_thread, NULL, heartbeat_broadcast, (void *) redis_ctx);
+
+    pthread_t ack_thread;
+    pthread_create(&ack_thread, NULL, redis_acknowledge_subscribe, NULL);
+
+    pthread_t reject_thread;
+    pthread_create(&reject_thread, NULL, redis_reject_subscribe, NULL);
 
     while (1) {
         int new_socket = accept(params_r->sockfd, (struct sockaddr *) &address, (socklen_t *) &addrlen);

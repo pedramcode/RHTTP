@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <unistd.h>
 #include "chttp.h"
+#include "cnetwork.h"
+#include "ctime.h"
 
 int csocket_create();
 void csocket_listen(int sockfd, unsigned int port);
