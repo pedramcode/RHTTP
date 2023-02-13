@@ -17,6 +17,12 @@ Services can seamlessly join/leave to RHTTP network without any interruption. RH
 
 Actually in a constant time interval, RHTTP publishes a signal called "**Heartbeat**" into redis, Any service in scope can receive this signal and publishes service info into "**Acknowledge pipe**". Then RHTTP stores service info into database. If a defined service does not provide acknowledge for a couple of heartbeats, RHTTP will remove service from database. 
 
+
+## Interfaces
+
+Here is a list of available and trusted interfaces for services to communicate with RHTTP service:
+* [NodeJS interface (NPM)](https://www.npmjs.com/package/rhttp_node)
+
 ## Requirements
 * [CArgs](https://github.com/pedramcode/cargs)
 * [HIRedis](https://github.com/redis/hiredis)
