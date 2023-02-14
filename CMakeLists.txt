@@ -22,5 +22,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         ctime
         chttp)
 
-file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/include/*.h)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
