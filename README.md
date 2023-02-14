@@ -21,8 +21,8 @@ Actually in a constant time interval, RHTTP publishes a signal called "**Heartbe
 ## Interfaces
 
 Here is a list of available and trusted interfaces for services to communicate with RHTTP server:
-* [NodeJS interface (NPM)](https://www.npmjs.com/package/rhttp_node)
-* [Python interface (PIP)](https://pypi.org/project/rhttp-python/0.0.1/)
+* [NodeJS interface (npm)](https://www.npmjs.com/package/rhttp_node)
+* [Python interface (pip)](https://pypi.org/project/rhttp-python/0.0.1/)
 
 ## Requirements
 * [CArgs](https://github.com/pedramcode/cargs)
