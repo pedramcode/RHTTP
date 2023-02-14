@@ -128,6 +128,15 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
         for (int i = 0; i < req_num; i++) {
             if (requests[i]->rejected >= service_len) {
                 cnetwork_delete_req_by_sockfd(db, requests[i]->sockfd);
+                if(debug_mode) {
+                    fprintf(stdout, "\033[0;31m");
+                    fprintf(stdout, "Terminate request\t");
+                    fprintf(stdout, "\033[0;35m");
+                    fprintf(stdout, "%s %s\t", requests[i]->path, requests[i]->method);
+                    fprintf(stdout, "\033[0;31m");
+                    fprintf(stdout, "No active server\n");
+                    fprintf(stdout, "\033[0m");
+                }
                 close(requests[i]->sockfd);
             }
         }
