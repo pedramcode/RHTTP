@@ -13,3 +13,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         cnetwork
         ctime
         chttp)
+
+file(GLOB_RECURSE HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
+install(TARGETS ${PROJECT_NAME}
+        LIBRARY DESTINATION /usr/lib)
+install(FILES ${HEADERS} DESTINATION /usr/include)

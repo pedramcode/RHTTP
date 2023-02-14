@@ -9,3 +9,8 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(${PROJECT_NAME} PUBLIC
         sqlite3)
+
+file(GLOB_RECURSE HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
+install(TARGETS ${PROJECT_NAME}
+        LIBRARY DESTINATION /usr/lib)
+install(FILES ${HEADERS} DESTINATION /usr/include)

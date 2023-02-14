@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 set(CMAKE_C_STANDARD 99)
-project(server C)
+project(rhttp C)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/csocket)
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/chttp)
@@ -21,3 +21,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         cnetwork
         ctime
         chttp)
+
+file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/include/*.h)
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)

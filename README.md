@@ -31,5 +31,14 @@ Here is a list of available and trusted interfaces for services to communicate w
 * LibSSL
 * SQLite3
 
+## Installation
+1. Clone repository `git clone git@github.com:pedramcode/RHTTP.git`
+2. Change directory to project root `cd RHTTP` 
+3. Create "build" folder: `mkdir build`
+4. Change directory to build: `cd build`
+5. Run cmake `cmake ..`
+6. Make project using make command `make`
+7. Install project `sudo make install`
+
 ## License
 This project is licensed under the terms of the MIT License. See the [LICENSE](LICENSE.txt) file for details.
