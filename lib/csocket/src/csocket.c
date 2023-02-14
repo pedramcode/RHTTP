@@ -39,7 +39,7 @@ void *request_handler(void *params) {
     cnetwork_add_req(db, &req);
 
     credis_publish(param_obj->redis_ctx, "REQUEST_PIPE", chttp_to_str(data, REQUEST));
-    free(data);
+    chttp_free(data);
     return 0;
 }
 
@@ -52,7 +52,7 @@ void response_handler(char *channel, char *data) {
     close(http->sock_id);
     // Remove req from database
     cnetwork_delete_req_by_sockfd(db, http->sock_id);
-    free(http);
+    chttp_free(http);
 }
 
 void *redis_response_subscribe() {

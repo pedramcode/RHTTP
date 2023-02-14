@@ -27,6 +27,11 @@ typedef enum http_connection_type_struct {
     CLOSE,
 } http_connection_t;
 
+typedef struct http_header_struct {
+    char *key;
+    char *value;
+} http_header_t;
+
 typedef struct http_prot_struct {
     int sock_id;
     http_method_t method;
@@ -51,6 +56,9 @@ typedef struct http_prot_struct {
 
     char *body;
     http_connection_t connection;
+
+    http_header_t **headers;
+    unsigned int header_len;
 } http_prot_t;
 
 /**
@@ -82,5 +90,7 @@ http_prot_t *chttp_parse(char *data, http_prot_type_t type);
  * @return Raw HTTP message string
  */
 char *chttp_to_str(http_prot_t *prot_p, http_prot_type_t type);
+
+void chttp_free(http_prot_t* prot);
 
 #endif
