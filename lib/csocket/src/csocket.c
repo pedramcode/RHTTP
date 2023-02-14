@@ -110,19 +110,18 @@ void acknowledge_handler(char *channel, char *data) {
     char *service_name = (char *) calloc( sp - data + 1, sizeof(char));
     memcpy(service_name, data, sp - data);
     char *service_desc = (char *) calloc( strlen(data) - strlen(service_name) + 1, sizeof(char));
-    strncpy(service_desc, sp + 1, strlen(data) - strlen(service_name));
-    service_desc[strlen(data) - strlen(service_name)] = '\0';
+    memcpy(service_desc, sp+1, strlen(data) - strlen(service_name));
 
     Service_t service = {0, service_name, service_desc, ctime_get_now_str()};
     Service_t **services;
     unsigned int service_count = cnetwork_get_services_by_name(db, service_name, &services);
     if (service_count == 0) {
         cnetwork_add_service(db, &service);
-        printf("Service created: %s\n", service.name);
+        printf("Service created: %s %s\n", service.name, service.desc);
     } else {
         service.id = services[0]->id;
         cnetwork_update_service(db, &service);
-        printf("Service updated: %s\n", service.name);
+        printf("Service updated: %s %s\n", service.name, service.desc);
     }
 
     for (int i = 0; i < service_count; i++) {
