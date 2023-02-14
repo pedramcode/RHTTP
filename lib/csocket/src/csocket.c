@@ -2,8 +2,9 @@
 #include "credis.h"
 
 static sqlite3 *db;
+static bool debug_mode = false;
 
-int csocket_create() {
+int csocket_create(bool debug) {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         fprintf(stderr, "Cannot create csocket file\n");
@@ -13,6 +14,12 @@ int csocket_create() {
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
         fprintf(stderr, "Cannot set csocket options\n");
         exit(EXIT_FAILURE);
+    }
+    debug_mode = debug;
+    if (debug) {
+        fprintf(stdout, "\033[0;32m");
+        fprintf(stdout, "Server created successfully\n");
+        fprintf(stdout, "\033[0m");
     }
     return sockfd;
 }
@@ -35,7 +42,7 @@ void *request_handler(void *params) {
     http_prot_t *data = chttp_parse(buffer, REQUEST);
     data->sock_id = new_socket;
 
-    Net_Request_t req = {0, data->sock_id, ctime_get_now_str(), 0};
+    Net_Request_t req = {0, data->sock_id, ctime_get_now_str(), 0, data->url, chttp_method_to_str(data->method)};
     cnetwork_add_req(db, &req);
 
     credis_publish(param_obj->redis_ctx, "REQUEST_PIPE", chttp_to_str(data, REQUEST));
@@ -50,6 +57,34 @@ void response_handler(char *channel, char *data) {
     char *res_str = chttp_to_str(http, RESPONSE);
     send(http->sock_id, res_str, strlen(res_str), 0);
     close(http->sock_id);
+
+    if (debug_mode) {
+        Net_Request_t *req = cnetwork_get_request_by_sockfd(db, http->sock_id);
+        if (req) {
+            fprintf(stdout, "\033[0;35m");
+            fprintf(stdout, "%s\t", req->path);
+            fprintf(stdout, "\033[0;37m");
+            fprintf(stdout, "%s\t", req->method);
+            fprintf(stdout, "\033[0;36m");
+            fprintf(stdout, "%d %s\t", http->status, http->status_text);
+            if(http->header_len!=0){
+                char *res_server_name = 0;
+                for(int i = 0 ; i < http->header_len ; i++){
+                    if(strcmp(http->headers[i]->key, "X-RES-SERVER") == 0){
+                        res_server_name = (char*) calloc(strlen(http->headers[i]->value), sizeof(char));
+                        strcpy(res_server_name, http->headers[i]->value);
+                        break;
+                    }
+                }
+                if(res_server_name){
+                    fprintf(stdout, "\033[0;33m");
+                    fprintf(stdout, "%s\t", res_server_name);
+                }
+            }
+            fprintf(stdout, "\n\033[0m");
+        }
+    }
+
     // Remove req from database
     cnetwork_delete_req_by_sockfd(db, http->sock_id);
     chttp_free(http);
@@ -75,7 +110,14 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
             time_t t = ctime_get_from_str(services[x]->last_update);
             time_t now = ctime_get_now();
             if (t + (beat_inter * exp_beat) < now) {
-                printf("Service deleted: %s\n", services[x]->name);
+//                printf("Service deleted: %s\n", services[x]->name);
+                if(debug_mode) {
+                    fprintf(stdout, "\033[0;31m");
+                    fprintf(stdout, "Server left: ");
+                    fprintf(stdout, "\033[0;36m");
+                    fprintf(stdout, "%s (%s)\n", services[x]->name, services[x]->desc);
+                    fprintf(stdout, "\033[0m");
+                }
                 cnetwork_delete_service_by_id(db, services[x]->id);
             }
         }
@@ -107,21 +149,28 @@ void acknowledge_handler(char *channel, char *data) {
     if (strcmp(channel, "ACKNOWLEDGE_PIPE") != 0) return;
     char *sp = strchr(data, 14);
     if (sp == NULL) return;
-    char *service_name = (char *) calloc( sp - data + 1, sizeof(char));
+    char *service_name = (char *) calloc(sp - data + 1, sizeof(char));
     memcpy(service_name, data, sp - data);
-    char *service_desc = (char *) calloc( strlen(data) - strlen(service_name) + 1, sizeof(char));
-    memcpy(service_desc, sp+1, strlen(data) - strlen(service_name));
+    char *service_desc = (char *) calloc(strlen(data) - strlen(service_name) + 1, sizeof(char));
+    memcpy(service_desc, sp + 1, strlen(data) - strlen(service_name));
 
     Service_t service = {0, service_name, service_desc, ctime_get_now_str()};
     Service_t **services;
     unsigned int service_count = cnetwork_get_services_by_name(db, service_name, &services);
     if (service_count == 0) {
         cnetwork_add_service(db, &service);
-        printf("Service created: %s %s\n", service.name, service.desc);
+//        printf("Service created: %s %s\n", service.name, service.desc);
+        if(debug_mode) {
+            fprintf(stdout, "\033[0;33m");
+            fprintf(stdout, "Server connected: ");
+            fprintf(stdout, "\033[0;36m");
+            fprintf(stdout, "%s (%s)\n", service.name, service.desc);
+            fprintf(stdout, "\033[0m");
+        }
     } else {
         service.id = services[0]->id;
         cnetwork_update_service(db, &service);
-        printf("Service updated: %s %s\n", service.name, service.desc);
+//        printf("Service updated: %s %s\n", service.name, service.desc);
     }
 
     for (int i = 0; i < service_count; i++) {
@@ -192,7 +241,12 @@ void csocket_listen(int sockfd, const unsigned int port) {
         fprintf(stderr, "Cannot listen to port\n");
         exit(EXIT_FAILURE);
     }
-    fprintf(stdout, "Server is listening to port %d\n", port);
+
+    fprintf(stdout, "\033[0;32m");
+    fprintf(stdout, "Server is listening to port ");
+    fprintf(stdout, "\033[0;36m");
+    fprintf(stdout, "%d\n", port);
+    fprintf(stdout, "\033[0m");
 
     socket_func_t params;
     params.sockfd = sockfd;

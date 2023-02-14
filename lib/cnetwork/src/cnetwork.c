@@ -27,6 +27,8 @@ sqlite3 *cnetwork_init() {
                           "ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
                           "SOCKFD INTEGER NOT NULL, "
                           "REJECT INTEGER DEFAULT 0, "
+                          "PATH TEXT, "
+                          "METHOD TEXT, "
                           "CREATED_AT TEXT)";
     rc = sqlite3_exec(db, sql_req_table, NULL, 0, &err);
     if (rc != SQLITE_OK) {
@@ -40,7 +42,7 @@ sqlite3 *cnetwork_init() {
 
 void cnetwork_add_service(sqlite3 *db, Service_t *service) {
     char *err = 0;
-    char *sql_service_add = (char *) calloc( 1024, sizeof(char));
+    char *sql_service_add = (char *) calloc(1024, sizeof(char));
     sprintf(sql_service_add, "INSERT INTO SERVICE (NAME, DESC, LAST_UPDATE) "
                              "VALUES ('%s', '%s', '%s')", service->name, service->desc, service->last_update);
     int rc = sqlite3_exec(db, sql_service_add, NULL, 0, &err);
@@ -57,7 +59,7 @@ unsigned int cnetwork_get_services(sqlite3 *db, Service_t ***result) {
     char *err = 0;
 
     char *query = "SELECT ID, NAME, DESC, LAST_UPDATE FROM SERVICE;";
-    *result = (Service_t **) calloc( 0, sizeof(Service_t));
+    *result = (Service_t **) calloc(0, sizeof(Service_t));
 
     int state = sqlite3_prepare_v2(db, query, -1, &stmt, 0);
     if (state != SQLITE_OK) {
@@ -103,7 +105,7 @@ unsigned int cnetwork_get_services(sqlite3 *db, Service_t ***result) {
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         *result = (Service_t **) realloc(*result, sizeof(Service_t *) * (row_count + 1));
-        (*result)[row_count] = (Service_t *) calloc( 1, sizeof(Service_t));
+        (*result)[row_count] = (Service_t *) calloc(1, sizeof(Service_t));
         for (int i = 0; i < col_count; i++) {
             char *val = (char *) sqlite3_column_text(stmt, i);
             switch (i) {
@@ -190,7 +192,7 @@ unsigned int cnetwork_get_services_by_name(sqlite3 *db, char *name, Service_t **
 
     char query[1024];
     sprintf(query, "SELECT ID, NAME, DESC, LAST_UPDATE FROM SERVICE WHERE NAME like '%s';", name);
-    *result = (Service_t **) calloc( 0, sizeof(Service_t));
+    *result = (Service_t **) calloc(0, sizeof(Service_t));
 
     int state = sqlite3_prepare_v2(db, query, -1, &stmt, 0);
     if (state != SQLITE_OK) {
@@ -236,7 +238,7 @@ unsigned int cnetwork_get_services_by_name(sqlite3 *db, char *name, Service_t **
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         *result = (Service_t **) realloc(*result, sizeof(Service_t *) * (row_count + 1));
-        (*result)[row_count] = (Service_t *) calloc( 1, sizeof(Service_t));
+        (*result)[row_count] = (Service_t *) calloc(1, sizeof(Service_t));
         for (int i = 0; i < col_count; i++) {
             char *val = (char *) sqlite3_column_text(stmt, i);
             switch (i) {
@@ -273,7 +275,7 @@ void cnetwork_print_service_info(Service_t *service) {
 
 void cnetwork_delete_service_by_id(sqlite3 *db, unsigned int id) {
     char *err = 0;
-    char *sql_service_add = (char *) calloc( 1024, sizeof(char));
+    char *sql_service_add = (char *) calloc(1024, sizeof(char));
     sprintf(sql_service_add, "DELETE FROM SERVICE WHERE id=%d", id);
     int rc = sqlite3_exec(db, sql_service_add, NULL, 0, &err);
     if (rc != SQLITE_OK) {
@@ -285,7 +287,7 @@ void cnetwork_delete_service_by_id(sqlite3 *db, unsigned int id) {
 
 void cnetwork_update_service(sqlite3 *db, Service_t *service) {
     char *err = 0;
-    char *sql_service_update = (char *) calloc( 1024, sizeof(char));
+    char *sql_service_update = (char *) calloc(1024, sizeof(char));
     sprintf(sql_service_update, "UPDATE SERVICE SET NAME='%s', DESC='%s', LAST_UPDATE='%s' WHERE id=%d", service->name,
             service->desc, service->last_update, service->id);
     int rc = sqlite3_exec(db, sql_service_update, NULL, 0, &err);
@@ -298,9 +300,9 @@ void cnetwork_update_service(sqlite3 *db, Service_t *service) {
 
 void cnetwork_add_req(sqlite3 *db, Net_Request_t *req) {
     char *err = 0;
-    char *sql_req_add = (char *) calloc( 1024, sizeof(char));
-    sprintf(sql_req_add, "INSERT INTO REQUEST (SOCKFD, CREATED_AT) VALUES (%d, '%s')", req->sockfd,
-            req->created_at);
+    char *sql_req_add = (char *) calloc(1024, sizeof(char));
+    sprintf(sql_req_add, "INSERT INTO REQUEST (SOCKFD, CREATED_AT, PATH, METHOD) VALUES (%d, '%s', '%s', '%s')", req->sockfd,
+            req->created_at, req->path, req->method);
     int rc = sqlite3_exec(db, sql_req_add, NULL, 0, &err);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Cannot add request: %s\n", err);
@@ -309,9 +311,9 @@ void cnetwork_add_req(sqlite3 *db, Net_Request_t *req) {
     free(sql_req_add);
 }
 
-void cnetwork_delete_req_by_sockfd(sqlite3 *db, unsigned int sockfd){
+void cnetwork_delete_req_by_sockfd(sqlite3 *db, unsigned int sockfd) {
     char *err = 0;
-    char *sql_req_del = (char *) calloc( 1024, sizeof(char));
+    char *sql_req_del = (char *) calloc(1024, sizeof(char));
     sprintf(sql_req_del, "DELETE FROM REQUEST WHERE SOCKFD=%d", sockfd);
     int rc = sqlite3_exec(db, sql_req_del, NULL, 0, &err);
     if (rc != SQLITE_OK) {
@@ -321,9 +323,9 @@ void cnetwork_delete_req_by_sockfd(sqlite3 *db, unsigned int sockfd){
     free(sql_req_del);
 }
 
-void cnetwork_inc_req_reject_by_sockfd(sqlite3 *db, unsigned int sockfd){
+void cnetwork_inc_req_reject_by_sockfd(sqlite3 *db, unsigned int sockfd) {
     char *err = 0;
-    char *sql_req_update = (char *) calloc( 1024, sizeof(char));
+    char *sql_req_update = (char *) calloc(1024, sizeof(char));
     sprintf(sql_req_update, "UPDATE REQUEST SET REJECT=REJECT+1 WHERE SOCKFD=%d", sockfd);
     int rc = sqlite3_exec(db, sql_req_update, NULL, 0, &err);
     if (rc != SQLITE_OK) {
@@ -333,13 +335,13 @@ void cnetwork_inc_req_reject_by_sockfd(sqlite3 *db, unsigned int sockfd){
     free(sql_req_update);
 }
 
-unsigned int cnetwork_get_requests(sqlite3 *db, Net_Request_t ***result){
+unsigned int cnetwork_get_requests(sqlite3 *db, Net_Request_t ***result) {
     int row_count = 0;
     sqlite3_stmt *stmt;
     char *err = 0;
 
-    char *query = "SELECT ID, SOCKFD, REJECT, CREATED_AT FROM REQUEST;";
-    *result = (Net_Request_t **) calloc( 0, sizeof(Net_Request_t));
+    char *query = "SELECT ID, SOCKFD, REJECT, CREATED_AT, PATH, METHOD FROM REQUEST;";
+    *result = (Net_Request_t **) calloc(0, sizeof(Net_Request_t));
 
     int state = sqlite3_prepare_v2(db, query, -1, &stmt, 0);
     if (state != SQLITE_OK) {
@@ -374,6 +376,14 @@ unsigned int cnetwork_get_requests(sqlite3 *db, Net_Request_t ***result){
                 (*result)[row_count]->created_at = (char *) malloc(sizeof(char) * strlen(val));
                 strcpy((*result)[row_count]->created_at, val);
                 break;
+            case 4:
+                (*result)[row_count]->path = (char *) malloc(sizeof(char) * strlen(val));
+                strcpy((*result)[row_count]->path, val);
+                break;
+            case 5:
+                (*result)[row_count]->method = (char *) malloc(sizeof(char) * strlen(val));
+                strcpy((*result)[row_count]->method, val);
+                break;
             default:
                 fprintf(stderr, "Critical request fetch error\n");
                 exit(EXIT_FAILURE);
@@ -400,6 +410,14 @@ unsigned int cnetwork_get_requests(sqlite3 *db, Net_Request_t ***result){
                     (*result)[row_count]->created_at = (char *) malloc(sizeof(char) * strlen(val));
                     strcpy((*result)[row_count]->created_at, val);
                     break;
+                case 4:
+                    (*result)[row_count]->path = (char *) malloc(sizeof(char) * strlen(val));
+                    strcpy((*result)[row_count]->path, val);
+                    break;
+                case 5:
+                    (*result)[row_count]->method = (char *) malloc(sizeof(char) * strlen(val));
+                    strcpy((*result)[row_count]->method, val);
+                    break;
                 default:
                     fprintf(stderr, "Critical request fetch error\n");
                     exit(EXIT_FAILURE);
@@ -410,4 +428,58 @@ unsigned int cnetwork_get_requests(sqlite3 *db, Net_Request_t ***result){
 
     sqlite3_finalize(stmt);
     return row_count;
+}
+
+Net_Request_t *cnetwork_get_request_by_sockfd(sqlite3 *db, unsigned int sockfd) {
+    sqlite3_stmt *stmt;
+    char *err = 0;
+
+    char query[1024];
+    sprintf(query, "SELECT ID, SOCKFD, REJECT, CREATED_AT, PATH, METHOD FROM REQUEST WHERE SOCKFD=%d;", sockfd);
+
+    int state = sqlite3_prepare_v2(db, query, -1, &stmt, 0);
+    if (state != SQLITE_OK) {
+        fprintf(stderr, "Cannot fetch request: %s\n", err);
+        sqlite3_free(err);
+        return 0;
+    }
+
+    state = sqlite3_step(stmt);
+    if (state == SQLITE_DONE || state != SQLITE_ROW) {
+        sqlite3_finalize(stmt);
+        return 0;
+    }
+
+    Net_Request_t *req = (Net_Request_t *) malloc(sizeof(Net_Request_t));
+    int col_count = sqlite3_column_count(stmt);
+    for (int i = 0; i < col_count; i++) {
+        char *val = (char *) sqlite3_column_text(stmt, i);
+        switch (i) {
+            case 0:
+                req->id = atoi(val);
+                break;
+            case 1:
+                req->sockfd = atoi(val);
+                break;
+            case 2:
+                req->rejected = atoi(val);
+                break;
+            case 3:
+                req->created_at = (char *) malloc(sizeof(char) * strlen(val));
+                strcpy(req->created_at, val);
+                break;
+            case 4:
+                req->path = (char *) malloc(sizeof(char) * strlen(val));
+                strcpy(req->path, val);
+                break;
+            case 5:
+                req->method = (char *) malloc(sizeof(char) * strlen(val));
+                strcpy(req->method, val);
+                break;
+            default:
+                fprintf(stderr, "Critical request fetch error\n");
+                exit(EXIT_FAILURE);
+        }
+    }
+    return req;
 }

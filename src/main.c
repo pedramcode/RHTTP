@@ -7,6 +7,7 @@
 int main(int argc, char *argv[]) {
     CargsMap_t map[] = {
             {"port", 'p', true, "Server port number"},
+            {"debug", 'd', false, "Debug mode (true|false)"},
     };
     unsigned int map_size = 2;
     cargs_parse(map, map_size, argc, argv);
@@ -14,7 +15,14 @@ int main(int argc, char *argv[]) {
 
     const int port = atoi(cargs_get(map, map_size, "port"));
 
-    int server = csocket_create();
+    bool debug = false;
+    char* debug_str = cargs_get(map, map_size, "debug");
+    if(debug_str){
+        if(strcmp(debug_str, "true")==0){
+            debug = true;
+        }
+    }
+    int server = csocket_create(debug);
     csocket_listen(server, port);
     return EXIT_SUCCESS;
 }

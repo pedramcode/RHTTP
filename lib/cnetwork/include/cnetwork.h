@@ -18,6 +18,8 @@ typedef struct cnetwork_req_struct {
     unsigned int sockfd;
     char *created_at;
     unsigned int rejected;
+    char* path;
+    char* method;
 } Net_Request_t;
 
 sqlite3 *cnetwork_init();
@@ -43,5 +45,7 @@ void cnetwork_inc_req_reject_by_sockfd(sqlite3 *db, unsigned int sockfd);
 void cnetwork_delete_req_by_sockfd(sqlite3 *db, unsigned int sockfd);
 
 unsigned int cnetwork_get_requests(sqlite3 *db, Net_Request_t ***result);
+
+Net_Request_t *cnetwork_get_request_by_sockfd(sqlite3 *db, unsigned int sockfd);
 
 #endif
