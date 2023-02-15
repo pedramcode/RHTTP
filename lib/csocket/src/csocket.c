@@ -55,6 +55,7 @@ void *request_handler(void *params) {
 
 void response_handler(char *channel, char *data) {
     if (strcmp(channel, "RESPONSE_PIPE") != 0) return;
+    if (!chttp_is_http(data)) return;
     http_prot_t *http = chttp_parse(data, RESPONSE);
     http->date = ctime_get_now_str();
     http->status_text = chttp_status_to_msg(http->status);
@@ -132,13 +133,21 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
         Net_Request_t **requests = 0;
         unsigned int req_num = cnetwork_get_requests(db, &requests);
         for (int i = 0; i < req_num; i++) {
+            // Take care of lost requests
             if (requests[i]->rejected >= service_len) {
 
                 char *res = chttpmsg_response("{\"err\":\"Lost request\"}", 418, "application/json",
                                               requests[i]->sockfd);
                 credis_publish(ctx, "RESPONSE_PIPE", res);
-//                cnetwork_delete_req_by_sockfd(db, requests[i]->sockfd);
-//                close(requests[i]->sockfd);
+            }
+
+            // Take care of time out requests
+            const long TIME_OUE_SECONDS = 120;
+            time_t created_at = ctime_get_from_str(requests[i]->created_at);
+            if (created_at + TIME_OUE_SECONDS < ctime_get_now()) {
+                char *res = chttpmsg_response("{\"err\":\"Request timeout\"}", 408, "application/json",
+                                              requests[i]->sockfd);
+                credis_publish(ctx, "RESPONSE_PIPE", res);
             }
         }
 
