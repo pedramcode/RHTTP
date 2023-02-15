@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 
 typedef enum http_method_struct {
@@ -91,6 +92,9 @@ http_prot_t *chttp_parse(char *data, http_prot_type_t type);
  */
 char *chttp_to_str(http_prot_t *prot_p, http_prot_type_t type);
 
-void chttp_free(http_prot_t* prot);
+void chttp_free(http_prot_t *prot);
 
+bool chttp_is_http(char *message);
+
+char *chttp_status_to_msg(int status_code);
 #endif

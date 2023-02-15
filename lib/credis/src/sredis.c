@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "credis.h"
 
 redisContext* credis_connect(const char* host, int port){
@@ -161,4 +162,14 @@ void credis_publish(redisContext* context, char* channel, char* data){
             fprintf(stderr, "Can't perform PUBLISH command\n");
         }
     }
+}
+
+void credis_close(redisContext* context){
+    if (context->fd > 0)
+        close(context->fd);
+    if (context->obuf != NULL)
+        sdsfree(context->obuf);
+    if (context->reader != NULL)
+        redisReaderFree(context->reader);
+    free(context);
 }

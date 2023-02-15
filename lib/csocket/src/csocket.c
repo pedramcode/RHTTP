@@ -40,6 +40,9 @@ void *request_handler(void *params) {
     char buffer[1024] = {0};
     long val = read(new_socket, buffer, 1024);
     http_prot_t *data = chttp_parse(buffer, REQUEST);
+    if (data == NULL) {
+        return 0;
+    }
     data->sock_id = new_socket;
 
     Net_Request_t req = {0, data->sock_id, ctime_get_now_str(), 0, data->url, chttp_method_to_str(data->method)};
@@ -54,6 +57,7 @@ void response_handler(char *channel, char *data) {
     if (strcmp(channel, "RESPONSE_PIPE") != 0) return;
     http_prot_t *http = chttp_parse(data, RESPONSE);
     http->date = ctime_get_now_str();
+    http->status_text = chttp_status_to_msg(http->status);
     char *res_str = chttp_to_str(http, RESPONSE);
     send(http->sock_id, res_str, strlen(res_str), 0);
     close(http->sock_id);
@@ -67,16 +71,18 @@ void response_handler(char *channel, char *data) {
             fprintf(stdout, "%s\t", req->method);
             fprintf(stdout, "\033[0;36m");
             fprintf(stdout, "%d %s\t", http->status, http->status_text);
-            if(http->header_len!=0){
+            fprintf(stdout, "\033[0;34m");
+            fprintf(stdout, "%s\t", http->date);
+            if (http->header_len != 0) {
                 char *res_server_name = 0;
-                for(int i = 0 ; i < http->header_len ; i++){
-                    if(strcmp(http->headers[i]->key, "X-RES-SERVER") == 0){
-                        res_server_name = (char*) calloc(strlen(http->headers[i]->value), sizeof(char));
+                for (int i = 0; i < http->header_len; i++) {
+                    if (strcmp(http->headers[i]->key, "X-RES-SERVER") == 0) {
+                        res_server_name = (char *) calloc(strlen(http->headers[i]->value), sizeof(char));
                         strcpy(res_server_name, http->headers[i]->value);
                         break;
                     }
                 }
-                if(res_server_name){
+                if (res_server_name) {
                     fprintf(stdout, "\033[0;33m");
                     fprintf(stdout, "%s\t", res_server_name);
                 }
@@ -111,7 +117,7 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
             time_t now = ctime_get_now();
             if (t + (beat_inter * exp_beat) < now) {
 //                printf("Service deleted: %s\n", services[x]->name);
-                if(debug_mode) {
+                if (debug_mode) {
                     fprintf(stdout, "\033[0;31m");
                     fprintf(stdout, "Server left: ");
                     fprintf(stdout, "\033[0;36m");
@@ -127,15 +133,12 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
         unsigned int req_num = cnetwork_get_requests(db, &requests);
         for (int i = 0; i < req_num; i++) {
             if (requests[i]->rejected >= service_len) {
-                cnetwork_delete_req_by_sockfd(db, requests[i]->sockfd);
-                if(debug_mode) {
-                    fprintf(stdout, "\033[0;35m");
-                    fprintf(stdout, "%s %s\t", requests[i]->path, requests[i]->method);
-                    fprintf(stdout, "\033[0;31m");
-                    fprintf(stdout, "Terminated, no active server\n");
-                    fprintf(stdout, "\033[0m");
-                }
-                close(requests[i]->sockfd);
+
+                char *res = chttpmsg_response("{\"err\":\"Lost request\"}", 418, "application/json",
+                                              requests[i]->sockfd);
+                credis_publish(ctx, "RESPONSE_PIPE", res);
+//                cnetwork_delete_req_by_sockfd(db, requests[i]->sockfd);
+//                close(requests[i]->sockfd);
             }
         }
 
@@ -167,7 +170,7 @@ void acknowledge_handler(char *channel, char *data) {
     if (service_count == 0) {
         cnetwork_add_service(db, &service);
 //        printf("Service created: %s %s\n", service.name, service.desc);
-        if(debug_mode) {
+        if (debug_mode) {
             fprintf(stdout, "\033[0;33m");
             fprintf(stdout, "Server connected: ");
             fprintf(stdout, "\033[0;36m");

@@ -23,5 +23,6 @@ void credis_flush(redisContext* context);
 void credis_expire(redisContext* context, char* key, int seconds);
 void credis_subscribe(redisAsyncContext* context, char* channel, credis_callback_func* callback);
 void credis_publish(redisContext* context, char* channel, char* data);
+void credis_close(redisContext* context);
 
 #endif

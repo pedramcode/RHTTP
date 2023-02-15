@@ -12,6 +12,7 @@
 #include "chttp.h"
 #include "cnetwork.h"
 #include "ctime.h"
+#include "chttpmsg.h"
 
 int csocket_create(bool debug);
 void csocket_listen(int sockfd, unsigned int port);
