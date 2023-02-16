@@ -5,7 +5,7 @@ redisContext* credis_connect(const char* host, int port){
     redisContext* context = redisConnect(host, port);
     if(context == NULL || context->err){
         if (context) {
-            fprintf(stderr, "Error: %s\n", context->errstr);
+            fprintf(stderr, "Redis Error: %s\n", context->errstr);
             exit(EXIT_FAILURE);
         } else {
             fprintf(stderr, "Can't allocate redis context\n");
@@ -20,7 +20,7 @@ redisAsyncContext* credis_connect_async(const char* host, int port){
     redisAsyncContext* context = redisAsyncConnect(host, port);
     if(context == NULL || context->err){
         if (context) {
-            fprintf(stderr, "Error: %s\n", context->errstr);
+            fprintf(stderr, "Redis Error: %s\n", context->errstr);
             exit(EXIT_FAILURE);
         } else {
             fprintf(stderr, "Can't allocate redis context\n");
@@ -35,7 +35,7 @@ void credis_set(redisContext* context, char* key, char* value){
     redisReply* reply = redisCommand(context, "SET %s %s", key, value);
     if(reply == NULL){
         if(context->err){
-            fprintf(stderr, "Error: %s\n", context->errstr);
+            fprintf(stderr, "Redis Error: %s\n", context->errstr);
         }else {
             fprintf(stderr, "Can't perform SET command\n");
         }
@@ -46,7 +46,7 @@ void credis_setex(redisContext* context, char* key, char* value, int expire_seco
     redisReply* reply = redisCommand(context, "SETEX %s %d %s", key, expire_seconds, value);
     if(reply == NULL){
         if(context->err){
-            fprintf(stderr, "Error: %s\n", context->errstr);
+            fprintf(stderr, "Redis Error: %s\n", context->errstr);
         }else {
             fprintf(stderr, "Can't perform SETX command\n");
         }
@@ -60,7 +60,7 @@ char* credis_get(redisContext* context, char* key){
     redisReply* reply = redisCommand(context, "GET %s", key);
     if(reply == NULL){
         if(context->err){
-            fprintf(stderr, "Error: %s\n", context->errstr);
+            fprintf(stderr, "Redis Error: %s\n", context->errstr);
         }else {
             fprintf(stderr, "Can't perform GET command\n");
         }
@@ -75,7 +75,7 @@ void credis_del(redisContext* context, char* key){
     redisReply* reply = redisCommand(context, "DEL %s", key);
     if(reply == NULL){
         if(context->err){
-            fprintf(stderr, "Error: %s\n", context->errstr);
+            fprintf(stderr, "Redis Error: %s\n", context->errstr);
         }else {
             fprintf(stderr, "Can't perform DEL command\n");
         }
@@ -86,7 +86,7 @@ bool credis_exists(redisContext* context, char* key){
     redisReply* reply = redisCommand(context, "EXISTS %s", key);
     if(reply == NULL){
         if(context->err){
-            fprintf(stderr, "Error: %s\n", context->errstr);
+            fprintf(stderr, "Redis Error: %s\n", context->errstr);
             return false;
         }else {
             fprintf(stderr, "Can't perform EXISTS command\n");
@@ -100,7 +100,7 @@ void credis_flush(redisContext* context){
     redisReply* reply = redisCommand(context, "FLUSHALL");
     if(reply == NULL){
         if(context->err){
-            fprintf(stderr, "Error: %s\n", context->errstr);
+            fprintf(stderr, "Redis Error: %s\n", context->errstr);
         }else {
             fprintf(stderr, "Can't perform FLUSHALL command\n");
         }
@@ -114,7 +114,7 @@ void credis_expire(redisContext* context, char* key, int seconds){
     redisReply* reply = redisCommand(context, "EXPIRE %s %d", key, seconds);
     if(reply == NULL){
         if(context->err){
-            fprintf(stderr, "Error: %s\n", context->errstr);
+            fprintf(stderr, "Redis Error: %s\n", context->errstr);
         }else {
             fprintf(stderr, "Can't perform EXPIRE command\n");
         }
@@ -128,7 +128,7 @@ void credis_persist(redisContext* context, char* key){
     redisReply* reply = redisCommand(context, "PERSIST %s", key);
     if(reply == NULL){
         if(context->err){
-            fprintf(stderr, "Error: %s\n", context->errstr);
+            fprintf(stderr, "Redis Error: %s\n", context->errstr);
         }else {
             fprintf(stderr, "Can't perform PERSIST command\n");
         }
@@ -157,7 +157,7 @@ void credis_publish(redisContext* context, char* channel, char* data){
     redisReply* reply = redisCommand(context, "PUBLISH %s %s", channel, data);
     if(reply == NULL){
         if(context->err){
-            fprintf(stderr, "Error: %s\n", context->errstr);
+            fprintf(stderr, "Redis Error: %s\n", context->errstr);
         }else {
             fprintf(stderr, "Can't perform PUBLISH command\n");
         }
