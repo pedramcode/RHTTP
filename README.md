@@ -30,6 +30,7 @@ Here is a list of available and trusted interfaces for services to communicate w
 * [Libevent](https://libevent.org/)
 * LibSSL
 * SQLite3
+* [libconfig](https://github.com/hyperrealm/libconfig)
 
 ## Installation
 1. Clone repository `git clone git@github.com:pedramcode/RHTTP.git`
@@ -39,6 +40,44 @@ Here is a list of available and trusted interfaces for services to communicate w
 5. Run cmake `cmake ..`
 6. Make project using make command `make`
 7. Install project `sudo make install`
+
+## Usage
+After installation, you need to create a config file to pass it to rhttp executable, Here is an example of config file:
+
+```text
+version: "1.0";
+
+server:
+{
+	name: "Development RHTTP server";
+	debug: true;
+
+	http:
+	{
+		host: "127.0.0.1";
+		port: 8080;
+	};
+
+	redis:
+	{
+		host: "127.0.0.1";
+		port: 6379;
+	};
+};
+```
+
+It's better save the file with "*.cfg" extension. For example `/etc/rhttp/rhttp.cfg`.
+
+Then run RHTTP server with this command:
+```shell
+rhttp --config /etc/rhttp/rhttp.cfg
+```
+
+or 
+
+```shell
+rhttp -c /etc/rhttp/rhttp.cfg
+```
 
 ## License
 This project is licensed under the terms of the MIT License. See the [LICENSE](LICENSE.txt) file for details.

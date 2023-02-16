@@ -13,8 +13,9 @@
 #include "cnetwork.h"
 #include "ctime.h"
 #include "chttpmsg.h"
+#include "cconfig.h"
 
-int csocket_create(bool debug);
-void csocket_listen(int sockfd, unsigned int port);
+int csocket_create();
+void csocket_listen(int sockfd, rhttp_config_t* rconfig);
 
 #endif

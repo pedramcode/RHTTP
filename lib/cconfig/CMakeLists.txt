@@ -1,19 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 
 set(CMAKE_C_STANDARD 99)
-project(csocket C)
+project(cconfig C)
 
 file(GLOB_RECURSE SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(${PROJECT_NAME} PUBLIC
-        hiredis
-        credis
-        cnetwork
-        ctime
-        cconfig
-        chttp)
+        config)
 
 file(GLOB_RECURSE HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
 install(TARGETS ${PROJECT_NAME}

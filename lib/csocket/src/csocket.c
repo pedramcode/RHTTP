@@ -2,9 +2,9 @@
 #include "credis.h"
 
 static sqlite3 *db;
-static bool debug_mode = false;
+static rhttp_config_t *config;
 
-int csocket_create(bool debug) {
+int csocket_create() {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         fprintf(stderr, "Cannot create csocket file\n");
@@ -14,12 +14,6 @@ int csocket_create(bool debug) {
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
         fprintf(stderr, "Cannot set csocket options\n");
         exit(EXIT_FAILURE);
-    }
-    debug_mode = debug;
-    if (debug) {
-        fprintf(stdout, "\033[0;32m");
-        fprintf(stdout, "Server created successfully\n");
-        fprintf(stdout, "\033[0m");
     }
     return sockfd;
 }
@@ -63,7 +57,7 @@ void response_handler(char *channel, char *data) {
     send(http->sock_id, res_str, strlen(res_str), 0);
     close(http->sock_id);
 
-    if (debug_mode) {
+    if (config->debug) {
         Net_Request_t *req = cnetwork_get_request_by_sockfd(db, http->sock_id);
         if (req) {
             fprintf(stdout, "\033[0;35m");
@@ -118,7 +112,7 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
             time_t now = ctime_get_now();
             if (t + (beat_inter * exp_beat) < now) {
 //                printf("Service deleted: %s\n", services[x]->name);
-                if (debug_mode) {
+                if (config->debug) {
                     fprintf(stdout, "\033[0;31m");
                     fprintf(stdout, "Server left: ");
                     fprintf(stdout, "\033[0;36m");
@@ -179,7 +173,7 @@ void acknowledge_handler(char *channel, char *data) {
     if (service_count == 0) {
         cnetwork_add_service(db, &service);
 //        printf("Service created: %s %s\n", service.name, service.desc);
-        if (debug_mode) {
+        if (config->debug) {
             fprintf(stdout, "\033[0;33m");
             fprintf(stdout, "Server connected: ");
             fprintf(stdout, "\033[0;36m");
@@ -246,12 +240,12 @@ _Noreturn void *server_listener(void *params) {
     }
 }
 
-void csocket_listen(int sockfd, const unsigned int port) {
+void csocket_listen(int sockfd, rhttp_config_t* rconfig) {
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(port);
+    address.sin_port = htons(rconfig->http_port);
     if (bind(sockfd, (struct sockaddr *) &address, sizeof(address)) < 0) {
         fprintf(stderr, "Cannot bind port to socket\n");
         exit(EXIT_FAILURE);
@@ -261,11 +255,17 @@ void csocket_listen(int sockfd, const unsigned int port) {
         exit(EXIT_FAILURE);
     }
 
+    config = rconfig;
+
     fprintf(stdout, "\033[0;32m");
     fprintf(stdout, "Server is listening to port ");
     fprintf(stdout, "\033[0;36m");
-    fprintf(stdout, "%d\n", port);
-    fprintf(stdout, "\033[0m");
+    fprintf(stdout, "%d ", rconfig->http_port);
+    if(config->debug){
+        fprintf(stdout, "\033[0;34m");
+        fprintf(stdout, "(DEBUG mode)");
+    }
+    fprintf(stdout, "\n\033[0m");
 
     socket_func_t params;
     params.sockfd = sockfd;

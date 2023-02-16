@@ -9,6 +9,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/lib/credis)
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/cnetwork)
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/ctime)
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/chttpmsg)
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/cconfig)
 
 file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/src/*.c)
 
@@ -21,6 +22,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         credis
         cnetwork
         ctime
+        cconfig
         chttpmsg
         chttp)
 
