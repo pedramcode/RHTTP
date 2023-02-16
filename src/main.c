@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
             debug = true;
         }
     }
-    int server = csocket_create(debug);
+    int server = csocket_create();
     csocket_listen(server, rhttp_config);
     return EXIT_SUCCESS;
 }
