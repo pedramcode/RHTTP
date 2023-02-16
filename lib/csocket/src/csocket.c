@@ -136,7 +136,7 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
             }
 
             // Take care of time out requests
-            const long TIME_OUE_SECONDS = 120;
+            const long TIME_OUE_SECONDS = config->http_timeout;
             time_t created_at = ctime_get_from_str(requests[i]->created_at);
             if (created_at + TIME_OUE_SECONDS < ctime_get_now()) {
                 char *res = chttpmsg_response("{\"err\":\"Request timeout\"}", 408, "application/json",
@@ -154,7 +154,7 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
             free(requests[i]);
         }
         free(requests);
-        sleep(beat_inter);
+        sleep(config->heartbeat_interval);
     }
 }
 

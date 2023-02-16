@@ -51,13 +51,14 @@ server:
 {
 	name: "Development RHTTP server";
 	debug: true;
+    heartbeat_interval: 10;
 
 	http:
 	{
 		host: "127.0.0.1";
 		port: 8080;
+		timeout: 120;
 	};
-
 	redis:
 	{
 		host: "127.0.0.1";

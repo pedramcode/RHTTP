@@ -10,9 +10,11 @@
 typedef struct cconfig_struct {
     char *name;
     bool debug;
+    int heartbeat_interval;
 
     char *http_host;
     int http_port;
+    int http_timeout;
 
     char *redis_host;
     int redis_port;
