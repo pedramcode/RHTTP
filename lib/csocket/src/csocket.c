@@ -129,7 +129,7 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
             if (requests[i]->rejected >= service_len) {
 
                 char *res = chttpmsg_response("{\"err\":\"Lost request\"}", 418, "application/json",
-                                              requests[i]->sockfd);
+                                              requests[i]->sockfd, config->name);
                 credis_publish(ctx, "RESPONSE_PIPE", res);
             }
         }
@@ -158,7 +158,7 @@ _Noreturn void *timeout_handler(){
             time_t created_at = ctime_get_from_str(requests[i]->created_at);
             if (created_at + TIME_OUE_SECONDS <= ctime_get_now()) {
                 char *res = chttpmsg_response("{\"err\":\"Request timeout\"}", 408, "application/json",
-                                              requests[i]->sockfd);
+                                              requests[i]->sockfd, config->name);
                 credis_publish(redis_ctx, "RESPONSE_PIPE", res);
             }
         }

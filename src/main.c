@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
     CargsMap_t map[] = {
             {"config", 'c', true, "RHTTP configuration file path"},
     };
-    unsigned int map_size = 2;
+    unsigned int map_size = 1;
     cargs_parse(map, map_size, argc, argv);
     cargs_validate(map, map_size, true);
 
