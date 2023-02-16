@@ -37,7 +37,9 @@ void cconfig_init(char *path, rhttp_config_t **config) {
 
     if(!config_lookup_int(&conf, "server.http.timeout", &(*config)->http_timeout)) (*config)->http_timeout = 120;
 
-    if(!config_lookup_int(&conf, "server.heartbeat_interval", &(*config)->heartbeat_interval)) (*config)->heartbeat_interval = 10;
+    if(!config_lookup_int(&conf, "server.heartbeat.interval", &(*config)->hb_interval)) (*config)->hb_interval = 10;
+
+    if(!config_lookup_int(&conf, "server.heartbeat.dead_server_beats", &(*config)->hb_dead_server_beats)) (*config)->hb_dead_server_beats = 3;
 
     config_destroy(&conf);
 }

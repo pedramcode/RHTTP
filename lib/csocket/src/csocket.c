@@ -100,7 +100,6 @@ void *redis_response_subscribe() {
 _Noreturn void *heartbeat_broadcast(void *redis_content) {
     redisContext *ctx = (redisContext *) redis_content;
     unsigned int beat_inter = 1;
-    unsigned int exp_beat = 3;
     while (1) {
         credis_publish(ctx, "HEARTBEAT", "BEAT");
 
@@ -110,8 +109,7 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
         for (int x = 0; x < service_len; x++) {
             time_t t = ctime_get_from_str(services[x]->last_update);
             time_t now = ctime_get_now();
-            if (t + (beat_inter * exp_beat) < now) {
-//                printf("Service deleted: %s\n", services[x]->name);
+            if (t + (beat_inter * config->hb_dead_server_beats) < now) {
                 if (config->debug) {
                     fprintf(stdout, "\033[0;31m");
                     fprintf(stdout, "Server left: ");
@@ -154,7 +152,7 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
             free(requests[i]);
         }
         free(requests);
-        sleep(config->heartbeat_interval);
+        sleep(config->hb_interval);
     }
 }
 

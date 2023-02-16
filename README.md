@@ -51,7 +51,11 @@ server:
 {
 	name: "Development RHTTP server";
 	debug: true;
-    heartbeat_interval: 10;
+
+	heartbeat: {
+        interval: 1;
+        dead_server_beats: 3;
+    };
 
 	http:
 	{

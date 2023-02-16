@@ -10,7 +10,9 @@
 typedef struct cconfig_struct {
     char *name;
     bool debug;
-    int heartbeat_interval;
+
+    int hb_interval;
+    int hb_dead_server_beats;
 
     char *http_host;
     int http_port;
