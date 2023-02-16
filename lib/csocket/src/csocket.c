@@ -132,15 +132,6 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
                                               requests[i]->sockfd);
                 credis_publish(ctx, "RESPONSE_PIPE", res);
             }
-
-            // Take care of time out requests
-            const long TIME_OUE_SECONDS = config->http_timeout;
-            time_t created_at = ctime_get_from_str(requests[i]->created_at);
-            if (created_at + TIME_OUE_SECONDS < ctime_get_now()) {
-                char *res = chttpmsg_response("{\"err\":\"Request timeout\"}", 408, "application/json",
-                                              requests[i]->sockfd);
-                credis_publish(ctx, "RESPONSE_PIPE", res);
-            }
         }
 
         // Free allocated memory
@@ -153,6 +144,24 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
         }
         free(requests);
         sleep(config->hb_interval);
+    }
+}
+
+_Noreturn void *timeout_handler(){
+    Net_Request_t **requests = 0;
+    redisContext *redis_ctx = credis_connect("127.0.0.1", 6379);
+    while(1) {
+        unsigned int req_num = cnetwork_get_requests(db, &requests);
+        for (int i = 0; i < req_num; i++) {
+            const long TIME_OUE_SECONDS = config->http_timeout;
+            time_t created_at = ctime_get_from_str(requests[i]->created_at);
+            if (created_at + TIME_OUE_SECONDS <= ctime_get_now()) {
+                char *res = chttpmsg_response("{\"err\":\"Request timeout\"}", 408, "application/json",
+                                              requests[i]->sockfd);
+                credis_publish(redis_ctx, "RESPONSE_PIPE", res);
+            }
+        }
+        sleep(config->http_timeout);
     }
 }
 
@@ -264,6 +273,9 @@ void csocket_listen(int sockfd, rhttp_config_t* rconfig) {
         fprintf(stdout, "(DEBUG mode)");
     }
     fprintf(stdout, "\n\033[0m");
+
+    pthread_t timeout_thread;
+    pthread_create(&timeout_thread, NULL, timeout_handler, NULL);
 
     socket_func_t params;
     params.sockfd = sockfd;

@@ -345,7 +345,6 @@ unsigned int cnetwork_get_requests(sqlite3 *db, Net_Request_t ***result) {
 
     int state = sqlite3_prepare_v2(db, query, -1, &stmt, 0);
     if (state != SQLITE_OK) {
-        fprintf(stderr, "Cannot fetch requests: %s\n", err);
         sqlite3_free(err);
         return 0;
     }
@@ -439,7 +438,6 @@ Net_Request_t *cnetwork_get_request_by_sockfd(sqlite3 *db, unsigned int sockfd) 
 
     int state = sqlite3_prepare_v2(db, query, -1, &stmt, 0);
     if (state != SQLITE_OK) {
-        fprintf(stderr, "Cannot fetch request: %s\n", err);
         sqlite3_free(err);
         return 0;
     }
