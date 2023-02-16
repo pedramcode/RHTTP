@@ -16,13 +16,6 @@ int main(int argc, char *argv[]) {
     rhttp_config_t* rhttp_config;
     cconfig_init(cargs_get(map, map_size, "config"), &rhttp_config);
 
-    bool debug = false;
-    char *debug_str = cargs_get(map, map_size, "debug");
-    if (debug_str) {
-        if (strcmp(debug_str, "true") == 0) {
-            debug = true;
-        }
-    }
     int server = csocket_create();
     csocket_listen(server, rhttp_config);
     return EXIT_SUCCESS;
