@@ -16,20 +16,20 @@ void cconfig_init(char *path, rhttp_config_t **config) {
 
     const char* server_name = "RHTTP Server";
     config_lookup_string(&conf, "server.name", &server_name);
-    (*config)->name = (char*) calloc(strlen(server_name)+1, sizeof(char));
-    memcpy((*config)->name, server_name, strlen(server_name));
+    (*config)->name = (char*) malloc(strlen(server_name) + 1);
+    strcpy((*config)->name, server_name);
 
     const char* http_host = "127.0.0.1";
     config_lookup_string(&conf, "server.http.host", &http_host);
-    (*config)->http_host = (char*) calloc(strlen(http_host)+1, sizeof(char));
-    memcpy((*config)->http_host, http_host, strlen(http_host));
+    (*config)->http_host = (char*) malloc(strlen(http_host) + 1);
+    strcpy((*config)->http_host, http_host);
 
     if(!config_lookup_int(&conf, "server.http.port", &(*config)->http_port)) (*config)->http_port = 1998;
 
     const char* redis_host = "127.0.0.1";
     config_lookup_string(&conf, "server.redis.host", &redis_host);
-    (*config)->redis_host = (char*) calloc(strlen(redis_host)+1, sizeof(char));
-    memcpy((*config)->redis_host, redis_host, strlen(redis_host));
+    (*config)->redis_host = (char*) malloc(strlen(redis_host) + 1);
+    strcpy((*config)->redis_host, redis_host);
 
     if(!config_lookup_int(&conf, "server.redis.port", &(*config)->redis_port)) (*config)->redis_port = 6379;
 

@@ -73,8 +73,9 @@ http_prot_t *chttp_parse(char *data, http_prot_type_t type) {
             char *next_dt = NULL;
             char delim[] = " ";
             char *dt = strtok_r(tok, delim, &next_dt);
-            char *key;
-            char *value = (char *) calloc(0, sizeof(char));
+            char *key = 0;
+            char *value = 0;
+            value = (char *) calloc(0, sizeof(char));
             int i = 0;
             while (dt != NULL) {
                 if (i == 0) {
