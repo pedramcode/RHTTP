@@ -49,27 +49,27 @@ version: "1.0";
 
 server:
 {
-    name: "Development RHTTP server";
-    debug: true;
-    
-    heartbeat: 
-    {
+	name: "Development RHTTP";
+	debug: true;
+
+	heartbeat:
+	{
         interval: 1;
         dead_server_beats: 3;
     };
-    
-    http:
-    {
-        host: "127.0.0.1";
-        port: 8080;
-        timeout: 120;
-    };
 
-    redis:
-    {
-        host: "127.0.0.1";
-        port: 6379;
-    };
+	http:
+	{
+		host: "127.0.0.1";
+		port: 8080;
+		timeout: 120;
+	};
+
+	redis:
+	{
+		host: "127.0.0.1";
+		port: 6379;
+	};
 };
 ```
 
