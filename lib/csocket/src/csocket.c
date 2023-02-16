@@ -92,7 +92,7 @@ void response_handler(char *channel, char *data) {
 }
 
 void *redis_response_subscribe() {
-    redisAsyncContext *redis_ctx_async = credis_connect_async("127.0.0.1", 6379);
+    redisAsyncContext *redis_ctx_async = credis_connect_async(config->redis_host, config->redis_port);
     credis_subscribe(redis_ctx_async, "RESPONSE_PIPE", response_handler);
     return NULL;
 }
@@ -149,7 +149,8 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
 
 _Noreturn void *timeout_handler(){
     Net_Request_t **requests = 0;
-    redisContext *redis_ctx = credis_connect("127.0.0.1", 6379);
+    
+    redisContext *redis_ctx = credis_connect(config->redis_host, config->redis_port);
     while(1) {
         unsigned int req_num = cnetwork_get_requests(db, &requests);
         for (int i = 0; i < req_num; i++) {
@@ -202,7 +203,7 @@ void acknowledge_handler(char *channel, char *data) {
 }
 
 void *redis_acknowledge_subscribe() {
-    redisAsyncContext *redis_ctx_async = credis_connect_async("127.0.0.1", 6379);
+    redisAsyncContext *redis_ctx_async = credis_connect_async(config->redis_host, config->redis_port);
     credis_subscribe(redis_ctx_async, "ACKNOWLEDGE_PIPE", acknowledge_handler);
     return NULL;
 }
@@ -214,7 +215,7 @@ void reject_handler(char *channel, char *data) {
 }
 
 void *redis_reject_subscribe() {
-    redisAsyncContext *redis_ctx_async = credis_connect_async("127.0.0.1", 6379);
+    redisAsyncContext *redis_ctx_async = credis_connect_async(config->redis_host, config->redis_port);
     credis_subscribe(redis_ctx_async, "REJECT_PIPE", reject_handler);
     return NULL;
 }
@@ -226,7 +227,7 @@ _Noreturn void *server_listener(void *params) {
 
     db = cnetwork_init();
 
-    redisContext *redis_ctx = credis_connect("127.0.0.1", 6379);
+    redisContext *redis_ctx = credis_connect(config->redis_host, config->redis_port);
     pthread_t subscribe_thread;
     pthread_create(&subscribe_thread, NULL, redis_response_subscribe, NULL);
 
