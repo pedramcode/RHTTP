@@ -31,6 +31,20 @@ void *request_handler(void *params) {
     req_handler_func_t *param_obj = (req_handler_func_t *) params;
     int new_socket = param_obj->sockfd;
 
+
+
+
+    char buffer[1024] = {0};
+    long val = read(new_socket, buffer, 1024);
+    http_prot_t *data = chttp_parse(buffer, REQUEST);
+    if (data == NULL) {
+        return 0;
+    }
+    data->sock_id = new_socket;
+
+    Net_Request_t req = {0, data->sock_id, ctime_get_now_str(), 0, data->url, chttp_method_to_str(data->method)};
+    cnetwork_add_req(db, &req);
+
     Service_t **services = 0;
     bool req_killed = false;
     unsigned int service_len = cnetwork_get_services(db, &services);
@@ -46,18 +60,6 @@ void *request_handler(void *params) {
     }
     free(services);
     if(req_killed) return 0;
-
-
-    char buffer[1024] = {0};
-    long val = read(new_socket, buffer, 1024);
-    http_prot_t *data = chttp_parse(buffer, REQUEST);
-    if (data == NULL) {
-        return 0;
-    }
-    data->sock_id = new_socket;
-
-    Net_Request_t req = {0, data->sock_id, ctime_get_now_str(), 0, data->url, chttp_method_to_str(data->method)};
-    cnetwork_add_req(db, &req);
 
     credis_publish(param_obj->redis_ctx, "REQUEST_PIPE", chttp_to_str(data, REQUEST));
     chttp_free(data);
