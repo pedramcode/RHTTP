@@ -10,6 +10,7 @@ char* chttpmsg_response(char* body, unsigned int status, char* content_type, int
     res->content_type = content_type;
     res->body = body;
     res->content_length = strlen(body);
+    res->connection = CLOSE;
     char* res_str = chttp_to_str(res, RESPONSE);
     chttp_free(res);
 
