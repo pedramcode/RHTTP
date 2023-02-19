@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 set(CMAKE_C_STANDARD 99)
-project(rhttp C)
+project(rhttp VERSION 0.0.1 LANGUAGES C)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/csocket)
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/chttp)
