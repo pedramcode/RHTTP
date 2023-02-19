@@ -31,9 +31,6 @@ void *request_handler(void *params) {
     req_handler_func_t *param_obj = (req_handler_func_t *) params;
     int new_socket = param_obj->sockfd;
 
-
-
-
     char buffer[1024] = {0};
     long val = read(new_socket, buffer, 1024);
     http_prot_t *data = chttp_parse(buffer, REQUEST);
