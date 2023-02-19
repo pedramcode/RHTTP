@@ -31,6 +31,23 @@ void *request_handler(void *params) {
     req_handler_func_t *param_obj = (req_handler_func_t *) params;
     int new_socket = param_obj->sockfd;
 
+    Service_t **services = 0;
+    bool req_killed = false;
+    unsigned int service_len = cnetwork_get_services(db, &services);
+    if (service_len == 0) {
+        redisContext *redis_ctx = credis_connect(config->redis_host, config->redis_port);
+        char *res = chttpmsg_response("{\"err\":\"Lost request\"}", 418, "application/json", new_socket, config->name);
+        credis_publish(redis_ctx, "RESPONSE_PIPE", res);
+        credis_close(redis_ctx);
+        req_killed = true;
+    }
+    for (int i = 0; i < service_len; i++) {
+        free(services[i]);
+    }
+    free(services);
+    if(req_killed) return 0;
+
+
     char buffer[1024] = {0};
     long val = read(new_socket, buffer, 1024);
     http_prot_t *data = chttp_parse(buffer, REQUEST);
@@ -147,11 +164,11 @@ _Noreturn void *heartbeat_broadcast(void *redis_content) {
     }
 }
 
-_Noreturn void *timeout_handler(){
+_Noreturn void *timeout_handler() {
     Net_Request_t **requests = 0;
-    
+
     redisContext *redis_ctx = credis_connect(config->redis_host, config->redis_port);
-    while(1) {
+    while (1) {
         unsigned int req_num = cnetwork_get_requests(db, &requests);
         for (int i = 0; i < req_num; i++) {
             const long TIME_OUE_SECONDS = config->http_timeout;
@@ -248,7 +265,7 @@ _Noreturn void *server_listener(void *params) {
     }
 }
 
-void csocket_listen(int sockfd, rhttp_config_t* rconfig) {
+void csocket_listen(int sockfd, rhttp_config_t *rconfig) {
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     address.sin_family = AF_INET;
@@ -269,7 +286,7 @@ void csocket_listen(int sockfd, rhttp_config_t* rconfig) {
     fprintf(stdout, "Server is listening to port ");
     fprintf(stdout, "\033[0;36m");
     fprintf(stdout, "%d ", rconfig->http_port);
-    if(config->debug){
+    if (config->debug) {
         fprintf(stdout, "\033[0;34m");
         fprintf(stdout, "(DEBUG mode)");
     }
