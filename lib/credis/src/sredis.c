@@ -162,6 +162,7 @@ void credis_publish(redisContext* context, char* channel, char* data){
             fprintf(stderr, "Can't perform PUBLISH command\n");
         }
     }
+    free(reply);
 }
 
 void credis_close(redisContext* context){
